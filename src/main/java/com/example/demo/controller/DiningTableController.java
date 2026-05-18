@@ -14,7 +14,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/tables")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "${cors.allowed-origins}")
 public class DiningTableController {
 
     @Autowired
@@ -76,3 +76,4 @@ public class DiningTableController {
         }
     }
 }
+

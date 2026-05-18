@@ -13,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/areas")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "${cors.allowed-origins}")
 public class AreaController {
 
     @Autowired
@@ -53,3 +53,4 @@ public class AreaController {
         }
     }
 }
+

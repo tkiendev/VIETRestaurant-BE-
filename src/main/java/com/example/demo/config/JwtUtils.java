@@ -2,21 +2,28 @@ package com.example.demo.config;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import jakarta.annotation.PostConstruct;
 import javax.crypto.SecretKey;
 import java.util.Base64;
 import java.util.Date;
 
 @Component
 public class JwtUtils {
-    // Key cố định để token vẫn hợp lệ sau khi restart server.
-    // Trong môi trường production nên đọc từ application.properties (jwt.secret).
-    private static final String SECRET_BASE64 = "bXlTZWNyZXRLZXlGb3JKV1RBdXRoZW50aWNhdGlvbjIwMjZSZXN0YXVyYW50";
-    private final SecretKey key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(SECRET_BASE64));
+
+    @Value("${jwt.secret}")
+    private String secretBase64;
+
+    private SecretKey key;
     private final long EXPIRATION_TIME = 86400000; // 1 day
+
+    @PostConstruct
+    public void init() {
+        key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secretBase64));
+    }
 
     public String generateToken(String username, String roleName, Integer userId) {
         return Jwts.builder()

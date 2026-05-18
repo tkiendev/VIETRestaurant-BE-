@@ -7,7 +7,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/supports")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "${cors.allowed-origins}")
 public class SupportController {
 
     @PostMapping
@@ -32,3 +32,4 @@ public class SupportController {
         ));
     }
 }
+

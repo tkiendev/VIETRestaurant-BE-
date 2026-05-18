@@ -13,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/categories")
-@CrossOrigin(origins = "http://localhost:5173") // Hỗ trợ gọi API từ Frontend
+@CrossOrigin(origins = "${cors.allowed-origins}") // Hỗ trợ gọi API từ Frontend
 public class CategoryController {
 
     @Autowired
@@ -70,3 +70,4 @@ public class CategoryController {
         }
     }
 }
+

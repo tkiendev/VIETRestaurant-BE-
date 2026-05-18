@@ -10,7 +10,7 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/system")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "${cors.allowed-origins}")
 public class SystemController {
 
     @Autowired
@@ -108,3 +108,4 @@ public class SystemController {
         }
     }
 }
+

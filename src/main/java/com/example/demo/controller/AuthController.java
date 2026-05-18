@@ -67,7 +67,7 @@ public class AuthController {
     // ĐĂNG KÝ TÀI KHOẢN KHÁCH HÀNG
     // =====================================================================
     @PostMapping("/register-customer")
-    @CrossOrigin(origins = "http://localhost:5173")
+    @CrossOrigin(origins = "${cors.allowed-origins}")
     public ResponseEntity<?> registerCustomer(@RequestBody java.util.Map<String, Object> body) {
         String username = (String) body.get("username");
         String password = (String) body.get("password");
@@ -124,3 +124,4 @@ public class AuthController {
         ));
     }
 }
+

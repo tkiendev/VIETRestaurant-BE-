@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/customers")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "${cors.allowed-origins}")
 public class CustomerController {
 
     @Autowired
@@ -59,3 +59,4 @@ public class CustomerController {
         ));
     }
 }
+
