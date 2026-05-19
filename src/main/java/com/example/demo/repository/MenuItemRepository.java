@@ -8,6 +8,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import com.example.demo.model.MenuItem;
 
+import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
@@ -18,6 +19,8 @@ public class MenuItemRepository {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    public JdbcTemplate getJdbcTemplate() { return this.jdbcTemplate; }
 
     // Ánh xạ dữ liệu từ ResultSet sang Object MenuItem
     private final RowMapper<MenuItem> rowMapper = (rs, rowNum) -> {
@@ -30,6 +33,7 @@ public class MenuItemRepository {
         
         item.setItemName(rs.getString("ItemName"));
         item.setPrice(rs.getBigDecimal("Price"));
+        item.setCostPrice(rs.getBigDecimal("CostPrice"));
         item.setImageUrl(rs.getString("ImageURL"));
         item.setIsAvailable(rs.getBoolean("IsAvailable"));
         return item;
@@ -55,7 +59,7 @@ public class MenuItemRepository {
 
     // 3. Thêm mới (Giữ nguyên)
     public MenuItem save(MenuItem item) {
-        String sql = "INSERT INTO MenuItem (CategoryID, ItemName, Price, ImageURL, IsAvailable) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO MenuItem (CategoryID, ItemName, Price, CostPrice, ImageURL, IsAvailable) VALUES (?, ?, ?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
         jdbcTemplate.update(connection -> {
@@ -63,8 +67,9 @@ public class MenuItemRepository {
             ps.setObject(1, item.getCategoryId());
             ps.setString(2, item.getItemName());
             ps.setBigDecimal(3, item.getPrice());
-            ps.setString(4, item.getImageUrl());
-            ps.setObject(5, item.getIsAvailable() != null ? item.getIsAvailable() : true);
+            ps.setBigDecimal(4, item.getCostPrice() != null ? item.getCostPrice() : BigDecimal.ZERO);
+            ps.setString(5, item.getImageUrl());
+            ps.setObject(6, item.getIsAvailable() != null ? item.getIsAvailable() : true);
             return ps;
         }, keyHolder);
 
@@ -76,11 +81,12 @@ public class MenuItemRepository {
 
     // 4. Cập nhật (Giữ nguyên)
     public int update(Integer id, MenuItem item) {
-        String sql = "UPDATE MenuItem SET CategoryID = ?, ItemName = ?, Price = ?, ImageURL = ?, IsAvailable = ? WHERE MenuItemID = ?";
+        String sql = "UPDATE MenuItem SET CategoryID = ?, ItemName = ?, Price = ?, CostPrice = ?, ImageURL = ?, IsAvailable = ? WHERE MenuItemID = ?";
         return jdbcTemplate.update(sql, 
                 item.getCategoryId(), 
                 item.getItemName(), 
                 item.getPrice(), 
+                item.getCostPrice() != null ? item.getCostPrice() : BigDecimal.ZERO, 
                 item.getImageUrl(), 
                 item.getIsAvailable(), 
                 id);

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class OrderService {
@@ -28,6 +29,12 @@ public class OrderService {
     private MenuItemRepository menuItemRepository;
 
     @Autowired
+    private com.example.demo.repository.MenuItemIngredientRepository menuItemIngredientRepository;
+
+    @Autowired
+    private com.example.demo.repository.IngredientRepository ingredientRepository;
+
+    @Autowired
     private SessionManager sessionManager;
 
     @Autowired
@@ -35,6 +42,7 @@ public class OrderService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    @Transactional
     public List<KitchenOrder> createOrder(Integer billId, Integer tableId, List<Map<String, Object>> menuItems) throws IOException {
         List<KitchenOrder> createdOrders = new ArrayList<>();
 
@@ -48,6 +56,15 @@ public class OrderService {
                 throw new IllegalArgumentException("Menu item not found: " + menuItemId);
             }
 
+            // Kiểm tra tồn kho cho công thức món
+            var recipe = menuItemIngredientRepository.findByMenuItemId(menuItemId);
+            for (var r : recipe) {
+                java.math.BigDecimal needed = r.getQuantity().multiply(new java.math.BigDecimal(quantity));
+                java.math.BigDecimal onHand = ingredientRepository.getStock(r.getIngredientId());
+                if (onHand.compareTo(needed) < 0) {
+                    throw new IllegalArgumentException("Nguyên liệu thiếu: ingredientId=" + r.getIngredientId() + ", cần=" + needed + ", còn=" + onHand);
+                }
+            }
             BillDetail billDetail = new BillDetail();
             billDetail.setBillID(billId);
             billDetail.setMenuItemID(menuItemId);
@@ -56,6 +73,12 @@ public class OrderService {
             billDetail.setSpecialNote(specialNote);
 
             BillDetail savedDetail = billDetailRepository.save(billDetail);
+
+            // Trừ tồn kho ngay khi order được tạo (đặt trước)
+            for (var r : recipe) {
+                java.math.BigDecimal needed = r.getQuantity().multiply(new java.math.BigDecimal(quantity));
+                ingredientRepository.decrementStock(r.getIngredientId(), needed);
+            }
 
             KitchenOrder kitchenOrder = new KitchenOrder();
             kitchenOrder.setBillDetailID(savedDetail.getBillDetailID());

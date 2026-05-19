@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -68,6 +69,7 @@ public class AuthController {
     // =====================================================================
     @PostMapping("/register-customer")
     @CrossOrigin(origins = "${cors.allowed-origins}")
+    @Transactional
     public ResponseEntity<?> registerCustomer(@RequestBody java.util.Map<String, Object> body) {
         String username = (String) body.get("username");
         String password = (String) body.get("password");

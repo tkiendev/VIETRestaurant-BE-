@@ -8,16 +8,18 @@ public class BillDetail {
     private Integer menuItemID;
     private Integer quantity;
     private BigDecimal unitPrice;
+    private BigDecimal costPrice;
     private String specialNote;
 
     public BillDetail() {}
 
-    public BillDetail(Integer billDetailID, Integer billID, Integer menuItemID, Integer quantity, BigDecimal unitPrice, String specialNote) {
+    public BillDetail(Integer billDetailID, Integer billID, Integer menuItemID, Integer quantity, BigDecimal unitPrice, BigDecimal costPrice, String specialNote) {
         this.billDetailID = billDetailID;
         this.billID = billID;
         this.menuItemID = menuItemID;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
+        this.costPrice = costPrice;
         this.specialNote = specialNote;
     }
 
@@ -61,6 +63,14 @@ public class BillDetail {
         this.unitPrice = unitPrice;
     }
 
+    public BigDecimal getCostPrice() {
+        return costPrice;
+    }
+
+    public void setCostPrice(BigDecimal costPrice) {
+        this.costPrice = costPrice;
+    }
+
     public String getSpecialNote() {
         return specialNote;
     }
@@ -77,6 +87,7 @@ public class BillDetail {
                 ", menuItemID=" + menuItemID +
                 ", quantity=" + quantity +
                 ", unitPrice=" + unitPrice +
+                ", costPrice=" + costPrice +
                 ", specialNote='" + specialNote + '\'' +
                 '}';
     }

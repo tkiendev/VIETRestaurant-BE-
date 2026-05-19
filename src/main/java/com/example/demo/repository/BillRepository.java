@@ -8,6 +8,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import com.example.demo.model.Bill;
 
+import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Timestamp;
@@ -27,6 +28,7 @@ public class BillRepository {
         bill.setCustomerID(rs.getObject("CustomerID", Integer.class));
         bill.setCashierID(rs.getObject("CashierID", Integer.class));
         bill.setTotalAmount(rs.getBigDecimal("TotalAmount"));
+        bill.setDiscount(rs.getBigDecimal("Discount"));
 
         Timestamp timeInTs = rs.getTimestamp("TimeIn");
         if (timeInTs != null) bill.setTimeIn(timeInTs.toLocalDateTime());
@@ -61,7 +63,7 @@ public class BillRepository {
     }
 
     public Bill save(Bill bill) {
-        String sql = "INSERT INTO Bill (TableID, CustomerID, CashierID, TotalAmount, TimeIn, TimeOut, Status) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Bill (TableID, CustomerID, CashierID, TotalAmount, Discount, TimeIn, TimeOut, Status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -69,9 +71,10 @@ public class BillRepository {
             ps.setObject(2, bill.getCustomerID());
             ps.setObject(3, bill.getCashierID());
             ps.setBigDecimal(4, bill.getTotalAmount());
-            ps.setTimestamp(5, Timestamp.valueOf(bill.getTimeIn() != null ? bill.getTimeIn() : LocalDateTime.now()));
-            ps.setObject(6, bill.getTimeOut() != null ? Timestamp.valueOf(bill.getTimeOut()) : null);
-            ps.setString(7, bill.getStatus() != null ? bill.getStatus() : "Chưa thanh toán");
+            ps.setBigDecimal(5, bill.getDiscount() != null ? bill.getDiscount() : BigDecimal.ZERO);
+            ps.setTimestamp(6, Timestamp.valueOf(bill.getTimeIn() != null ? bill.getTimeIn() : LocalDateTime.now()));
+            ps.setObject(7, bill.getTimeOut() != null ? Timestamp.valueOf(bill.getTimeOut()) : null);
+            ps.setString(8, bill.getStatus() != null ? bill.getStatus() : "Chưa thanh toán");
             return ps;
         }, keyHolder);
         if (keyHolder.getKey() != null) bill.setBillID(keyHolder.getKey().intValue());
@@ -79,12 +82,13 @@ public class BillRepository {
     }
 
     public int update(Integer id, Bill bill) {
-        String sql = "UPDATE Bill SET TableID = ?, CustomerID = ?, CashierID = ?, TotalAmount = ?, TimeIn = ?, TimeOut = ?, Status = ? WHERE BillID = ?";
+        String sql = "UPDATE Bill SET TableID = ?, CustomerID = ?, CashierID = ?, TotalAmount = ?, Discount = ?, TimeIn = ?, TimeOut = ?, Status = ? WHERE BillID = ?";
         return jdbcTemplate.update(sql,
                 bill.getTableID(),
                 bill.getCustomerID(),
                 bill.getCashierID(),
                 bill.getTotalAmount(),
+                bill.getDiscount() != null ? bill.getDiscount() : BigDecimal.ZERO,
                 bill.getTimeIn() != null ? Timestamp.valueOf(bill.getTimeIn()) : null,
                 bill.getTimeOut() != null ? Timestamp.valueOf(bill.getTimeOut()) : null,
                 bill.getStatus(),

@@ -34,33 +34,33 @@ public class UserRepository {
     };
 
     public List<User> findAllEmployees() {
-        return jdbcTemplate.query("SELECT * FROM User WHERE UserType = 'Employee'", rowMapper);
+        return jdbcTemplate.query("SELECT * FROM `User` WHERE UserType = 'Employee'", rowMapper);
     }
 
     public List<User> findAllCustomers() {
-        return jdbcTemplate.query("SELECT * FROM User WHERE UserType = 'Customer' ORDER BY UserID DESC", rowMapper);
+        return jdbcTemplate.query("SELECT * FROM `User` WHERE UserType = 'Customer' ORDER BY UserID DESC", rowMapper);
     }
 
     public Optional<User> findByPhone(String phone) {
         if (phone == null || phone.trim().isEmpty()) {
             return Optional.empty();
         }
-        List<User> users = jdbcTemplate.query("SELECT * FROM User WHERE Phone = ? LIMIT 1", rowMapper, phone.trim());
+        List<User> users = jdbcTemplate.query("SELECT * FROM `User` WHERE Phone = ? LIMIT 1", rowMapper, phone.trim());
         return users.isEmpty() ? Optional.empty() : Optional.of(users.get(0));
     }
 
     public Optional<User> findById(Integer id) {
-        List<User> users = jdbcTemplate.query("SELECT * FROM User WHERE UserID = ?", rowMapper, id);
+        List<User> users = jdbcTemplate.query("SELECT * FROM `User` WHERE UserID = ?", rowMapper, id);
         return users.isEmpty() ? Optional.empty() : Optional.of(users.get(0));
     }
     
     public Optional<User> findByAccountId(Integer accountId) {
-        List<User> users = jdbcTemplate.query("SELECT * FROM User WHERE AccountID = ?", rowMapper, accountId);
+        List<User> users = jdbcTemplate.query("SELECT * FROM `User` WHERE AccountID = ?", rowMapper, accountId);
         return users.isEmpty() ? Optional.empty() : Optional.of(users.get(0));
     }
 
     public User save(User user) {
-        String sql = "INSERT INTO User (AccountID, UserType, FullName, Phone, Email, Address, RewardPoints, CustomerTier, Notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO `User` (AccountID, UserType, FullName, Phone, Email, Address, RewardPoints, CustomerTier, Notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -87,7 +87,7 @@ public class UserRepository {
     }
 
     public int update(Integer id, User user) {
-        String sql = "UPDATE User SET FullName = ?, Phone = ?, Email = ?, Address = ? WHERE UserID = ?";
+        String sql = "UPDATE `User` SET FullName = ?, Phone = ?, Email = ?, Address = ? WHERE UserID = ?";
         return jdbcTemplate.update(sql,
                 user.getFullName(),
                 user.getPhone(),
@@ -97,6 +97,6 @@ public class UserRepository {
     }
 
     public int deleteById(Integer id) {
-        return jdbcTemplate.update("DELETE FROM User WHERE UserID = ?", id);
+        return jdbcTemplate.update("DELETE FROM `User` WHERE UserID = ?", id);
     }
 }

@@ -10,6 +10,7 @@ import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,6 +59,7 @@ public class EmployeeController {
     }
 
     @PostMapping
+    @Transactional
     public ResponseEntity<?> createEmployee(@RequestBody EmployeeDTO dto) {
         // Kiểm tra username
         if (accountRepository.findByUsername(dto.getUsername()).isPresent()) {
@@ -88,6 +90,7 @@ public class EmployeeController {
     }
 
     @PutMapping("/{userId}")
+    @Transactional
     public ResponseEntity<?> updateEmployee(@PathVariable Integer userId, @RequestBody EmployeeDTO dto) {
         Optional<User> userOpt = userRepository.findById(userId);
         if (!userOpt.isPresent()) {
@@ -118,6 +121,7 @@ public class EmployeeController {
     }
 
     @DeleteMapping("/{userId}")
+    @Transactional
     public ResponseEntity<?> deleteEmployee(@PathVariable Integer userId) {
         Optional<User> userOpt = userRepository.findById(userId);
         if (userOpt.isPresent()) {

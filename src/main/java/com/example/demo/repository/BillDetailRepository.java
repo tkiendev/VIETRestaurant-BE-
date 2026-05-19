@@ -8,6 +8,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import com.example.demo.model.BillDetail;
 
+import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
@@ -25,6 +26,7 @@ public class BillDetailRepository {
         detail.setMenuItemID(rs.getInt("MenuItemID"));
         detail.setQuantity(rs.getInt("Quantity"));
         detail.setUnitPrice(rs.getBigDecimal("UnitPrice"));
+        detail.setCostPrice(rs.getBigDecimal("CostPrice"));
         // SpecialNote không có trong bảng BillDetail, chỉ có trong KitchenOrder
         return detail;
     };
@@ -46,7 +48,7 @@ public class BillDetailRepository {
     }
 
     public BillDetail save(BillDetail detail) {
-        String sql = "INSERT INTO BillDetail (BillID, MenuItemID, Quantity, UnitPrice) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO BillDetail (BillID, MenuItemID, Quantity, UnitPrice, CostPrice) VALUES (?, ?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -54,6 +56,7 @@ public class BillDetailRepository {
             ps.setInt(2, detail.getMenuItemID());
             ps.setInt(3, detail.getQuantity());
             ps.setBigDecimal(4, detail.getUnitPrice());
+            ps.setBigDecimal(5, detail.getCostPrice() != null ? detail.getCostPrice() : BigDecimal.ZERO);
             return ps;
         }, keyHolder);
         if (keyHolder.getKey() != null) detail.setBillDetailID(keyHolder.getKey().intValue());
@@ -61,12 +64,13 @@ public class BillDetailRepository {
     }
 
     public int update(Integer id, BillDetail detail) {
-        String sql = "UPDATE BillDetail SET BillID = ?, MenuItemID = ?, Quantity = ?, UnitPrice = ? WHERE BillDetailID = ?";
+        String sql = "UPDATE BillDetail SET BillID = ?, MenuItemID = ?, Quantity = ?, UnitPrice = ?, CostPrice = ? WHERE BillDetailID = ?";
         return jdbcTemplate.update(sql,
                 detail.getBillID(),
                 detail.getMenuItemID(),
                 detail.getQuantity(),
                 detail.getUnitPrice(),
+                detail.getCostPrice() != null ? detail.getCostPrice() : BigDecimal.ZERO,
                 id);
     }
 

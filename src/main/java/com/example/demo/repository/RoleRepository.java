@@ -23,11 +23,11 @@ public class RoleRepository {
     };
 
     public List<Role> findAll() {
-        return jdbcTemplate.query("SELECT * FROM Role", rowMapper);
+        return jdbcTemplate.query("SELECT * FROM `Role`", rowMapper);
     }
 
     public Optional<Role> findById(Integer id) {
-        List<Role> roles = jdbcTemplate.query("SELECT * FROM Role WHERE RoleID = ?", rowMapper, id);
+        List<Role> roles = jdbcTemplate.query("SELECT * FROM `Role` WHERE RoleID = ?", rowMapper, id);
         return roles.isEmpty() ? Optional.empty() : Optional.of(roles.get(0));
     }
 }

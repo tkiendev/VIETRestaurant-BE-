@@ -1,6 +1,8 @@
 package com.example.demo.model;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
 
 public class MenuItem {
     private Integer menuItemId;
@@ -8,8 +10,10 @@ public class MenuItem {
     private String categoryName; // THÊM TRƯỜNG NÀY ĐỂ HIỂN THỊ TÊN DANH MỤC
     private String itemName;
     private BigDecimal price;
+    private BigDecimal costPrice;
     private String imageUrl;
     private Boolean isAvailable;
+    private List<Map<String,Object>> ingredients; // transient: {ingredientId, name, unit, quantity, unitCost}
 
     public MenuItem() {}
 
@@ -29,9 +33,15 @@ public class MenuItem {
     public BigDecimal getPrice() { return price; }
     public void setPrice(BigDecimal price) { this.price = price; }
 
+    public BigDecimal getCostPrice() { return costPrice; }
+    public void setCostPrice(BigDecimal costPrice) { this.costPrice = costPrice; }
+
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
     public Boolean getIsAvailable() { return isAvailable; }
     public void setIsAvailable(Boolean isAvailable) { this.isAvailable = isAvailable; }
+
+    public List<Map<String, Object>> getIngredients() { return ingredients; }
+    public void setIngredients(List<Map<String, Object>> ingredients) { this.ingredients = ingredients; }
 }

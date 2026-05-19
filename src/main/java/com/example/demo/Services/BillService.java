@@ -21,9 +21,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class BillService {
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Autowired
     private BillRepository billRepository;
@@ -73,16 +78,37 @@ public class BillService {
         return bill;
     }
 
+    @Transactional
     public Bill processPayment(Integer billId, String paymentMethod, BigDecimal amountPaid) throws IOException {
+        if (billId == null) {
+            throw new IllegalArgumentException("Bill ID is required");
+        }
+        if (paymentMethod == null || paymentMethod.isBlank()) {
+            throw new IllegalArgumentException("Payment method is required");
+        }
+        if (amountPaid == null || amountPaid.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Amount paid must be a non-negative value");
+        }
+
         Optional<Bill> billOpt = billRepository.findById(billId);
         if (!billOpt.isPresent()) {
             throw new IllegalArgumentException("Bill not found: " + billId);
         }
 
         Bill bill = billOpt.get();
+        if (bill.getStatus() != null && bill.getStatus().equalsIgnoreCase("Đã thanh toán")) {
+            throw new IllegalArgumentException("Bill has already been paid");
+        }
+        if (paymentRepository.findByBillId(billId).isPresent()) {
+            throw new IllegalArgumentException("Payment already exists for bill: " + billId);
+        }
+
         bill.setTimeOut(LocalDateTime.now());
         bill.setStatus("Đã thanh toán");
-        billRepository.update(billId, bill);
+        int updatedRows = billRepository.update(billId, bill);
+        if (updatedRows == 0) {
+            throw new IllegalArgumentException("Failed to update bill status for bill: " + billId);
+        }
 
         Payment payment = new Payment();
         payment.setBillID(billId);
@@ -99,17 +125,21 @@ public class BillService {
         return bill;
     }
 
-    private void broadcastPaymentCompleted(Bill bill, String paymentMethod, BigDecimal amountPaid) throws IOException {
-        Map<String, Object> paymentEvent = new HashMap<>();
-        paymentEvent.put("event", "payment_completed");
-        paymentEvent.put("billId", bill.getBillID());
-        paymentEvent.put("tableId", bill.getTableID());
-        paymentEvent.put("paymentMethod", paymentMethod);
-        paymentEvent.put("amountPaid", amountPaid);
-        paymentEvent.put("billTotal", bill.getTotalAmount());
-        paymentEvent.put("paymentTime", LocalDateTime.now().toString());
+    private void broadcastPaymentCompleted(Bill bill, String paymentMethod, BigDecimal amountPaid) {
+        try {
+            Map<String, Object> paymentEvent = new HashMap<>();
+            paymentEvent.put("event", "payment_completed");
+            paymentEvent.put("billId", bill.getBillID());
+            paymentEvent.put("tableId", bill.getTableID());
+            paymentEvent.put("paymentMethod", paymentMethod);
+            paymentEvent.put("amountPaid", amountPaid);
+            paymentEvent.put("billTotal", bill.getTotalAmount());
+            paymentEvent.put("paymentTime", LocalDateTime.now().toString());
 
-        sessionManager.broadcastToAll(paymentEvent);
+            sessionManager.broadcastToAll(paymentEvent);
+        } catch (Exception e) {
+            System.err.println("Unable to broadcast payment completed event: " + e.getMessage());
+        }
     }
 
     // Lấy lịch sử hoá đơn đã thanh toán (dùng cho Thu ngân & Admin)
@@ -258,10 +288,40 @@ public class BillService {
         return result;
     }
 
+    private double calculateBillProfit(Integer billId, Map<Integer, Double> itemCostMap) {
+        double profit = 0.0;
+        try {
+            List<BillDetail> details = billDetailRepository.findByBillId(billId);
+            for (BillDetail bd : details) {
+                double unitPrice = bd.getUnitPrice() != null ? bd.getUnitPrice().doubleValue() : 0.0;
+                double cost = itemCostMap.getOrDefault(bd.getMenuItemID(), 0.0);
+                double qty = bd.getQuantity();
+                profit += qty * (unitPrice - cost);
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi tính lợi nhuận Bill " + billId + ": " + e.getMessage());
+        }
+        return profit;
+    }
+
     // Thống kê số bill theo 7 ngày gần nhất
     public Map<String, Object> getBillStats() {
         List<Bill> allBills = billRepository.findAll();
         Map<String, Object> result = new HashMap<>();
+
+        Map<Integer, Double> itemCostMap = new HashMap<>();
+        try {
+            String sql = "SELECT MenuItemID, Cost FROM MenuItemCost";
+            List<Map<String, Object>> costs = jdbcTemplate.queryForList(sql);
+            for (Map<String, Object> c : costs) {
+                Integer id = (Integer) c.get("MenuItemID");
+                Number costNum = (Number) c.get("Cost");
+                double cost = costNum != null ? costNum.doubleValue() : 0.0;
+                itemCostMap.put(id, cost);
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi khi lấy giá vốn món ăn: " + e.getMessage());
+        }
 
         // 7 ngày gần nhất
         List<Map<String, Object>> daily = new ArrayList<>();
@@ -290,21 +350,30 @@ public class BillService {
                 })
                 .count();
 
-            double revenue = allBills.stream()
+            List<Bill> dayCompletedBills = allBills.stream()
                 .filter(b -> "Đã thanh toán".equals(b.getStatus()))
                 .filter(b -> b.getTimeOut() != null)
                 .filter(b -> {
                     LocalDate billDate = b.getTimeOut().toLocalDate();
                     return !billDate.isBefore(day) && billDate.isBefore(nextDay);
                 })
+                .toList();
+
+            double revenue = dayCompletedBills.stream()
                 .mapToDouble(b -> b.getTotalAmount() != null ? b.getTotalAmount().doubleValue() : 0)
                 .sum();
+
+            double profit = 0.0;
+            for (Bill b : dayCompletedBills) {
+                profit += calculateBillProfit(b.getBillID(), itemCostMap);
+            }
 
             Map<String, Object> dayData = new HashMap<>();
             dayData.put("date", day.format(fmt));
             dayData.put("completed", completed);
             dayData.put("pending", pending);
             dayData.put("revenue", revenue);
+            dayData.put("profit", profit);
             daily.add(dayData);
         }
 

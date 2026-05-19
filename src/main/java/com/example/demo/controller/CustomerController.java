@@ -27,10 +27,9 @@ public class CustomerController {
     public ResponseEntity<?> createCustomer(@RequestBody User customer) {
         if ((customer.getFullName() == null || customer.getFullName().trim().isEmpty()) &&
                 (customer.getPhone() == null || customer.getPhone().trim().isEmpty())) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "Vui lòng nhập tên hoặc số điện thoại khách hàng"
-            ));
+            customer.setFullName("Khách vãng lai");
+        } else if (customer.getFullName() == null || customer.getFullName().trim().isEmpty()) {
+            customer.setFullName("Khách vãng lai (" + customer.getPhone().trim() + ")");
         }
 
         if (customer.getPhone() != null && !customer.getPhone().trim().isEmpty()) {
@@ -56,6 +55,38 @@ public class CustomerController {
                 "success", true,
                 "message", "Customer created successfully",
                 "customer", saved
+        ));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateCustomer(@PathVariable Integer id, @RequestBody User customerDetails) {
+        Optional<User> opt = userRepository.findById(id);
+        if (!opt.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        User existing = opt.get();
+        existing.setFullName(customerDetails.getFullName());
+        existing.setPhone(customerDetails.getPhone());
+        existing.setEmail(customerDetails.getEmail());
+        existing.setAddress(customerDetails.getAddress());
+        userRepository.update(id, existing);
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Cập nhật khách hàng thành công",
+                "customer", existing
+        ));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteCustomer(@PathVariable Integer id) {
+        Optional<User> opt = userRepository.findById(id);
+        if (!opt.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        userRepository.deleteById(id);
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Xóa khách hàng thành công"
         ));
     }
 }

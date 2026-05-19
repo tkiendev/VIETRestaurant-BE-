@@ -9,18 +9,20 @@ public class Bill {
     private Integer customerID;
     private Integer cashierID;
     private BigDecimal totalAmount;
+    private BigDecimal discount;
     private LocalDateTime timeIn;
     private LocalDateTime timeOut;
     private String status;
 
     public Bill() {}
 
-    public Bill(Integer billID, Integer tableID, Integer customerID, Integer cashierID, BigDecimal totalAmount, LocalDateTime timeIn, LocalDateTime timeOut, String status) {
+    public Bill(Integer billID, Integer tableID, Integer customerID, Integer cashierID, BigDecimal totalAmount, BigDecimal discount, LocalDateTime timeIn, LocalDateTime timeOut, String status) {
         this.billID = billID;
         this.tableID = tableID;
         this.customerID = customerID;
         this.cashierID = cashierID;
         this.totalAmount = totalAmount;
+        this.discount = discount;
         this.timeIn = timeIn;
         this.timeOut = timeOut;
         this.status = status;
@@ -66,6 +68,14 @@ public class Bill {
         this.totalAmount = totalAmount;
     }
 
+    public BigDecimal getDiscount() {
+        return discount;
+    }
+
+    public void setDiscount(BigDecimal discount) {
+        this.discount = discount;
+    }
+
     public LocalDateTime getTimeIn() {
         return timeIn;
     }
@@ -98,6 +108,7 @@ public class Bill {
                 ", customerID=" + customerID +
                 ", cashierID=" + cashierID +
                 ", totalAmount=" + totalAmount +
+                ", discount=" + discount +
                 ", timeIn=" + timeIn +
                 ", timeOut=" + timeOut +
                 ", status='" + status + '\'' +

@@ -132,15 +132,15 @@ public class BillController {
                     "message", "Payment processed successfully",
                     "bill", bill
             ));
-        } catch (IOException e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "Failed to process payment: " + e.getMessage()
-            ));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "message", e.getMessage()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "message", "Failed to process payment: " + e.getMessage()
             ));
         }
     }
@@ -160,6 +160,29 @@ public class BillController {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "message", "Failed to update status: " + e.getMessage()
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()
+            ));
+        }
+    }
+
+    @DeleteMapping("/{billId}/kitchen-orders/{kitchenOrderId}")
+    public ResponseEntity<?> cancelKitchenOrder(
+            @PathVariable Integer billId,
+            @PathVariable Integer kitchenOrderId) {
+        try {
+            kitchenOrderService.cancelKitchenOrder(kitchenOrderId);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Kitchen order cancelled successfully"
+            ));
+        } catch (IOException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Failed to cancel kitchen order: " + e.getMessage()
             ));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of(
