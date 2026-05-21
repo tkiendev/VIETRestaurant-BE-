@@ -288,20 +288,34 @@ public class BillService {
         return result;
     }
 
-    private double calculateBillProfit(Integer billId, Map<Integer, Double> itemCostMap) {
-        double profit = 0.0;
+    private double calculateBillTotalCost(Integer billId, Map<Integer, Double> itemCostMap) {
+        double totalCost = 0.0;
+        try {
+            List<BillDetail> details = billDetailRepository.findByBillId(billId);
+            for (BillDetail bd : details) {
+                double cost = itemCostMap.getOrDefault(bd.getMenuItemID(), 0.0);
+                double qty = bd.getQuantity();
+                totalCost += qty * cost;
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi tính giá vốn Bill " + billId + ": " + e.getMessage());
+        }
+        return totalCost;
+    }
+
+    private double calculateBillRevenue(Integer billId) {
+        double revenue = 0.0;
         try {
             List<BillDetail> details = billDetailRepository.findByBillId(billId);
             for (BillDetail bd : details) {
                 double unitPrice = bd.getUnitPrice() != null ? bd.getUnitPrice().doubleValue() : 0.0;
-                double cost = itemCostMap.getOrDefault(bd.getMenuItemID(), 0.0);
                 double qty = bd.getQuantity();
-                profit += qty * (unitPrice - cost);
+                revenue += qty * unitPrice;
             }
         } catch (Exception e) {
-            System.err.println("Lỗi tính lợi nhuận Bill " + billId + ": " + e.getMessage());
+            System.err.println("Lỗi tính doanh thu Bill " + billId + ": " + e.getMessage());
         }
-        return profit;
+        return revenue;
     }
 
     // Thống kê số bill theo 7 ngày gần nhất
@@ -359,14 +373,13 @@ public class BillService {
                 })
                 .toList();
 
-            double revenue = dayCompletedBills.stream()
-                .mapToDouble(b -> b.getTotalAmount() != null ? b.getTotalAmount().doubleValue() : 0)
-                .sum();
-
-            double profit = 0.0;
+            double revenue = 0.0;
+            double totalCost = 0.0;
             for (Bill b : dayCompletedBills) {
-                profit += calculateBillProfit(b.getBillID(), itemCostMap);
+                revenue += calculateBillRevenue(b.getBillID());
+                totalCost += calculateBillTotalCost(b.getBillID(), itemCostMap);
             }
+            double profit = revenue - totalCost; // Lợi nhuận thực tế (Doanh thu - Giá vốn)
 
             Map<String, Object> dayData = new HashMap<>();
             dayData.put("date", day.format(fmt));
@@ -374,6 +387,7 @@ public class BillService {
             dayData.put("pending", pending);
             dayData.put("revenue", revenue);
             dayData.put("profit", profit);
+            dayData.put("cost", totalCost);
             daily.add(dayData);
         }
 

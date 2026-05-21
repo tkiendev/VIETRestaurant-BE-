@@ -108,6 +108,10 @@ public class OrderService {
         orderEvent.put("unitPrice", billDetail.getUnitPrice());
         orderEvent.put("specialNote", billDetail.getSpecialNote());
         orderEvent.put("tableId", tableId);
+        
+        com.example.demo.model.DiningTable table = diningTableService.getTableById(tableId).orElse(null);
+        orderEvent.put("tableName", table != null ? table.getTableName() : "Bàn " + tableId);
+        
         orderEvent.put("timestamp", LocalDateTime.now().toString());
 
         sessionManager.broadcastToAll(orderEvent);

@@ -125,5 +125,67 @@ public class AuthController {
             "roleName", "customer"
         ));
     }
+
+    // =====================================================================
+    // ĐỔI MẬT KHẨU
+    // =====================================================================
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody java.util.Map<String, Object> body) {
+        String oldPassword = (String) body.get("oldPassword");
+        String newPassword = (String) body.get("newPassword");
+
+        String token = authHeader.replace("Bearer ", "").trim();
+        String username = jwtUtils.parseToken(token).getSubject();
+
+        Optional<Account> accountOpt = accountRepository.findByUsername(username);
+        if (!accountOpt.isPresent()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("success", false, "message", "Tài khoản không tồn tại"));
+        }
+        Account account = accountOpt.get();
+        if (!oldPassword.equals(account.getPassword())) {
+            return ResponseEntity.badRequest()
+                    .body(java.util.Map.of("success", false, "message", "Mật khẩu cũ không đúng"));
+        }
+        if (newPassword == null || newPassword.trim().length() < 6) {
+            return ResponseEntity.badRequest()
+                    .body(java.util.Map.of("success", false, "message", "Mật khẩu mới phải có ít nhất 6 ký tự"));
+        }
+        account.setPassword(newPassword.trim());
+        accountRepository.save(account);
+        return ResponseEntity.ok(java.util.Map.of("success", true, "message", "Đổi mật khẩu thành công"));
+    }
+
+    // =====================================================================
+    // CẬP NHẬT HỒ SƠ
+    // =====================================================================
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateProfile(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody java.util.Map<String, Object> body) {
+        String token = authHeader.replace("Bearer ", "").trim();
+        String username = jwtUtils.parseToken(token).getSubject();
+
+        Optional<Account> accountOpt = accountRepository.findByUsername(username);
+        if (!accountOpt.isPresent()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("success", false, "message", "Tài khoản không tồn tại"));
+        }
+        Account account = accountOpt.get();
+        Optional<User> userOpt = userRepository.findByAccountId(account.getAccountID());
+        if (!userOpt.isPresent()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("success", false, "message", "Không tìm thấy thông tin người dùng"));
+        }
+        User user = userOpt.get();
+        if (body.containsKey("fullName")) user.setFullName((String) body.get("fullName"));
+        if (body.containsKey("phone")) user.setPhone((String) body.get("phone"));
+        if (body.containsKey("email")) user.setEmail((String) body.get("email"));
+        if (body.containsKey("address")) user.setAddress((String) body.get("address"));
+        userRepository.save(user);
+        return ResponseEntity.ok(java.util.Map.of("success", true, "message", "Cập nhật hồ sƠ thành công", "user", user));
+    }
 }
 

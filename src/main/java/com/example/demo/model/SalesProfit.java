@@ -6,6 +6,7 @@ public class SalesProfit {
     private Integer menuItemId;
     private String itemName;
     private BigDecimal soldQty;
+    private BigDecimal totalRevenue;
     private BigDecimal totalProfit;
 
     public Integer getMenuItemId() { return menuItemId; }
@@ -19,4 +20,7 @@ public class SalesProfit {
 
     public BigDecimal getTotalProfit() { return totalProfit; }
     public void setTotalProfit(BigDecimal totalProfit) { this.totalProfit = totalProfit; }
+
+    public BigDecimal getTotalRevenue() { return totalRevenue; }
+    public void setTotalRevenue(BigDecimal totalRevenue) { this.totalRevenue = totalRevenue; }
 }

@@ -25,6 +25,7 @@ public class ProfitRepository {
         s.setMenuItemId(rs.getInt("MenuItemID"));
         s.setItemName(rs.getString("ItemName"));
         s.setSoldQty(rs.getBigDecimal("SoldQty") != null ? rs.getBigDecimal("SoldQty") : BigDecimal.ZERO);
+        s.setTotalRevenue(rs.getBigDecimal("TotalRevenue") != null ? rs.getBigDecimal("TotalRevenue") : BigDecimal.ZERO);
         s.setTotalProfit(rs.getBigDecimal("TotalProfit") != null ? rs.getBigDecimal("TotalProfit") : BigDecimal.ZERO);
         return s;
     };
@@ -48,6 +49,7 @@ public class ProfitRepository {
     public List<SalesProfit> findSalesProfitSummary() {
         String sql = "SELECT mi.MenuItemID AS MenuItemID, mi.ItemName AS ItemName, " +
                      "SUM(bd.Quantity) AS SoldQty, " +
+                     "SUM(bd.Quantity * bd.UnitPrice) AS TotalRevenue, " +
                      "SUM(bd.Quantity * (bd.UnitPrice - COALESCE(mc.Cost,0))) AS TotalProfit " +
                      "FROM BillDetail bd " +
                      "JOIN MenuItem mi ON mi.MenuItemID = bd.MenuItemID " +
